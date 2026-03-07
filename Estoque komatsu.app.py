@@ -1,39 +1,40 @@
 import streamlit as st
 import pandas as pd
 
-# 1. CONFIGURAÇÃO DE CORES "ANTIFANTASMA" (FORÇANDO CONTRASTE)
+# 1. COMANDO BRUTO PARA EXPULSAR O PRETO (CSS ANTI-DARK MODE)
 st.set_page_config(page_title="KOMATSU PANELTRACK", layout="wide")
 
 st.markdown("""
     <style>
-    /* Fundo cinza claro para não cansar a vista */
-    .main { background-color: #e5e7eb !important; }
+    /* Obriga o fundo a ser BRANCO em tudo */
+    .stApp, .main, body, .stAppHeader { background-color: #ffffff !important; }
     
-    /* Blocos Brancos com Letras PRETAS (Forçado) */
+    /* Obriga TODO o texto a ser PRETO */
+    * { color: #000000 !important; }
+    
+    /* Títulos em AZUL para destaque */
+    h1, h2, h3, b, strong { color: #004a99 !important; }
+    
+    /* Deixar as métricas (quadrados de cima) com borda para aparecer bem */
     div[data-testid="stMetric"] {
-        background-color: #ffffff !important;
+        background-color: #f8f9fa !important;
         border: 2px solid #004a99 !important;
         padding: 15px !important;
         border-radius: 10px !important;
     }
-    /* Forçando a cor do número e do título a ser PRETA */
-    div[data-testid="stMetricValue"] > div { color: #000000 !important; font-weight: bold !important; }
-    div[data-testid="stMetricLabel"] > div > p { color: #004a99 !important; font-weight: bold !important; }
     
-    /* Tabelas e Textos */
-    .stTable, p, span, h1, h2, h3 { color: #000000 !important; }
-    
-    /* Botão Azul Grande */
+    /* Botão AZUL com letra BRANCA (a única exceção) */
+    button p { color: #ffffff !important; }
     button { 
         background-color: #004a99 !important; 
-        color: white !important; 
-        font-weight: bold !important; 
+        border: none !important;
         height: 3.5em !important;
+        width: 100% !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. BANCO DE DADOS COM AS 22 FAMÍLIAS (Mascado)
+# 2. BANCO DE DADOS COMPLETO (TODAS AS 22 FAMÍLIAS)
 if 'estoque' not in st.session_state:
     st.session_state.estoque = [
         {"code": "GA042", "name": "cofre externo", "per": 23, "racks": 59},
@@ -60,23 +61,23 @@ if 'estoque' not in st.session_state:
         {"code": "GA039", "name": "assoalho traseiro NB4", "per": 40, "racks": 33}
     ]
 
-# 3. INTERFACE E CÁLCULOS
-st.title("📊 Painel Track - Komatsu")
+# 3. INTERFACE
+st.title("🚜 Painel Track - Komatsu")
 
 df = pd.DataFrame(st.session_state.estoque)
 total_pecas = (df['racks'] * df['per']).sum()
 cobertura = total_pecas / 63 
 
 c1, c2 = st.columns(2)
-c1.metric("ESTOQUE TOTAL (PEÇAS)", f"{int(total_pecas):,}")
-c2.metric("COBERTURA MÉDIA (HORAS)", f"{cobertura:.1f}h")
+c1.metric("ESTOQUE (PEÇAS)", f"{int(total_pecas):,}")
+c2.metric("COBERTURA (HORAS)", f"{cobertura:.1f}h")
 
 st.markdown("---")
 
-# 4. ATUALIZAR RACKS (Onde você edita)
-st.subheader("📝 Atualizar Contagem")
-lista_pecas = [f"{i['code']} - {i['name']}" for i in st.session_state.estoque]
-escolha = st.selectbox("Selecione o Item:", lista_pecas)
+# 4. ATUALIZAÇÃO (Onde você digita)
+st.subheader("📝 Atualizar Racks")
+opcoes = [f"{i['code']} - {i['name']}" for i in st.session_state.estoque]
+escolha = st.selectbox("Selecione a Peça:", opcoes)
 novo_valor = st.number_input("Nova Qtd de Racks:", min_value=0, step=1)
 
 if st.button("SALVAR ATUALIZAÇÃO"):
@@ -87,8 +88,8 @@ if st.button("SALVAR ATUALIZAÇÃO"):
     st.success("✅ Estoque Atualizado!")
     st.rerun()
 
-# 5. TABELA FINAL
+# 5. RELATÓRIO
 st.subheader("📋 Relatório por Família")
 df_vis = pd.DataFrame(st.session_state.estoque)
-df_vis['Total Peças'] = df_vis['racks'] * df_vis['per']
-st.table(df_vis[['code', 'name', 'racks', 'Total Peças']])
+df_vis['Peças'] = df_vis['racks'] * df_vis['per']
+st.table(df_vis[['code', 'name', 'racks', 'Peças']])
