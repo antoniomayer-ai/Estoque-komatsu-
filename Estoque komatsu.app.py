@@ -2,49 +2,36 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime
 
-# 1. ESTILO "GESTÃO À VISTA" (Cópia fiel da sua imagem)
-st.set_page_config(page_title="ESTAMPARIA KOMATSU", layout="wide")
+# 1. ESTILO "ESTAMPARIA" - FORÇANDO BRANCO E PRETO
+st.set_page_config(page_title="KOMATSU PANELTRACK", layout="wide")
 
 st.markdown("""
     <style>
-    .stApp { background-color: #1a1c24 !important; }
-    h1, h2, h3, p, span, div { color: #ffffff !important; font-family: 'Segoe UI', sans-serif; }
+    .stApp { background-color: #ffffff !important; }
+    * { color: #000000 !important; font-family: sans-serif; }
     
-    /* Estilo dos Cards */
+    /* Estilo dos Cartões */
     .card {
-        background-color: #ffffff;
+        background-color: #f8f9fa;
         border-radius: 8px;
-        padding: 12px;
+        padding: 10px;
         margin-bottom: 10px;
+        border: 1px solid #d1d5db;
         border-left: 8px solid #22c55e;
-        min-height: 180px;
+        height: 160px;
     }
     .card-red { border-left-color: #ef4444 !important; }
     .card-yellow { border-left-color: #facc15 !important; }
     .card-green { border-left-color: #22c55e !important; }
     
-    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-    .card-code { color: #1a1c24; font-weight: bold; font-size: 1.1rem; }
-    .card-desc { color: #1a1c24; font-size: 0.8rem; text-transform: uppercase; }
-    .card-racks { color: #1a1c24; font-size: 1.4rem; font-weight: 900; }
-    .card-pct { color: #22c55e; font-weight: bold; float: right; }
-    .card-pieces { color: #9ca3af; font-size: 0.8rem; text-align: center; margin: 10px 0; }
+    .card-code { color: #004a99 !important; font-weight: bold; font-size: 1.1rem; display: block; }
+    .card-name { color: #374151 !important; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; margin-bottom: 5px; display: block; }
+    .card-racks { color: #000000 !important; font-size: 1.3rem; font-weight: 900; }
+    .card-hours { background-color: #ffffff; border-radius: 4px; padding: 3px; text-align: center; font-weight: bold; font-size: 1.1rem; margin-top: 5px; border: 1px solid #e5e7eb; }
     
-    /* Faixa de Horas Colorida */
-    .hours-box {
-        border-radius: 4px;
-        padding: 5px;
-        text-align: center;
-        font-weight: bold;
-        font-size: 1.2rem;
-    }
-    .bg-red { background-color: #fef2f2; color: #ef4444 !important; }
-    .bg-yellow { background-color: #fefce8; color: #ca8a04 !important; }
-    .bg-green { background-color: #f0fdf4; color: #166534 !important; }
-    
-    /* Legenda no rodapé */
-    .legend { display: flex; justify-content: center; gap: 20px; margin-top: 20px; font-size: 0.8rem; }
-    .dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+    .text-red { color: #ef4444 !important; }
+    .text-yellow { color: #ca8a04 !important; }
+    .text-green { color: #166534 !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -75,71 +62,71 @@ if 'inventory' not in st.session_state:
         {"code": "GA040", "name": "HB5", "cat": "HB", "per": 50, "racks": 45, "ideal": 32},
     ]
 
-# 3. HEADER (Data, Título e Percentual Global)
-now = datetime.now().strftime("%d/%m - %H:%M")
-df = pd.DataFrame(st.session_state.inventory)
-total_racks = df['racks'].sum()
-ideal_racks = df['ideal'].sum()
-global_pct = (total_racks / ideal_racks) * 100
+# 3. SIDEBAR JPH
+with st.sidebar:
+    st.header("⚙️ Produção JPH")
+    j_total = st.number_input("TOTAL", value=61)
+    j_nb = st.number_input("NB", value=24)
+    j_hb = st.number_input("HB", value=37)
 
-st.write(f"### ESTAMPARIA KOMATSU <span style='float:right; color:#22c55e;'>{global_pct:.0f}% ESTOQUE</span>", unsafe_allow_html=True)
-st.caption(f"{now}")
+# 4. LÓGICA DE RELATÓRIO WHATSAPP
+agora = datetime.now().strftime("%d/%m %H:%M")
+status_ok = []
+status_atencao = []
+status_critico = []
 
-# 4. BARRA DE CONFIGURAÇÃO JPH
-col_j1, col_j2, col_j3 = st.columns([2, 1, 1])
-j_total = col_j1.number_input("⏱ JPH TOTAL", value=61)
-j_nb = col_j2.number_input("📈 NB", value=24)
-j_hb = col_j3.number_input("📉 HB", value=37)
-
-st.divider()
-
-# 5. ATUALIZAÇÃO RÁPIDA (PARA O ANTÔNIO NÃO SOFRER)
-with st.expander("📝 LANÇAR NOVA CONTAGEM"):
-    escolha = st.selectbox("Peça:", [f"{i['code']} - {i['name']}" for i in st.session_state.inventory])
-    valor = st.number_input("Qtd Racks:", min_value=0, step=1)
-    if st.button("SALVAR DADOS"):
-        cod = escolha.split(" - ")[0]
-        for item in st.session_state.inventory:
-            if item['code'] == cod: item['racks'] = valor
-        st.success("Salvo!")
-        st.rerun()
-
-# 6. GRID DE CARDS (4 colunas como na imagem)
-cols = st.columns(4)
-for i, item in enumerate(st.session_state.inventory):
-    # Cálculos Individuais
+for item in st.session_state.inventory:
     pecas = item['racks'] * item['per']
     if item['cat'] == 'NB': h = pecas / j_nb if j_nb > 0 else 0
     elif item['cat'] == 'HB': h = pecas / j_hb if j_hb > 0 else 0
     else: h = pecas / j_total if j_total > 0 else 0
     
-    pct = (item['racks'] / item['ideal']) * 100
+    info = f"* {item['code']} {item['name']}: {h:.1f}h"
+    if h < 8: status_critico.append(info)
+    elif h <= 15: status_atencao.append(info)
+    else: status_ok.append(info)
+
+msg_zap = f"RELATÓRIO Komatsu 📅 {agora}\n📊 Nível Geral: {(sum([i['racks'] for i in st.session_state.inventory])/sum([i['ideal'] for i in st.session_state.inventory])*100):.0f}%\n⚡ JPH: {j_total} (NB: {j_nb} / HB: {j_hb})\n\n"
+if status_critico: msg_zap += "🔴 CRÍTICO (<8h)\n" + "\n".join(status_critico) + "\n\n"
+if status_atencao: msg_zap += "⚠️ ATENÇÃO (8h-15h)\n" + "\n".join(status_atencao) + "\n\n"
+if status_ok: msg_zap += "✅ OK (>15h)\n" + "\n".join(status_ok)
+
+# 5. HEADER E RELATÓRIO
+st.title("🚜 KOMATSU - PAINEL TRACK")
+
+with st.expander("📲 GERAR RELATÓRIO WHATSAPP"):
+    st.code(msg_zap, language=None)
+    st.caption("Copia o texto acima e cola no WhatsApp")
+
+with st.expander("📝 ATUALIZAR RACKS"):
+    escolha = st.selectbox("Peça:", [f"{i['code']} - {i['name']}" for i in st.session_state.inventory])
+    valor = st.number_input("Qtd Racks:", min_value=0, step=1)
+    if st.button("SALVAR"):
+        for item in st.session_state.inventory:
+            if item['code'] == escolha.split(" - ")[0]: item['racks'] = valor
+        st.rerun()
+
+st.divider()
+
+# 6. GRID DE CARDS
+cols = st.columns(4)
+for i, item in enumerate(st.session_state.inventory):
+    pecas = item['racks'] * item['per']
+    if item['cat'] == 'NB': h = pecas / j_nb if j_nb > 0 else 0
+    elif item['cat'] == 'HB': h = pecas / j_hb if j_hb > 0 else 0
+    else: h = pecas / j_total if j_total > 0 else 0
     
-    # Lógica de Cores
-    status_class = "card-green"
-    bg_class = "bg-green"
-    if h < 8: status_class, bg_class = "card-red", "bg-red"
-    elif h <= 15: status_class, bg_class = "card-yellow", "bg-yellow"
+    color_class = "card-green"
+    text_class = "text-green"
+    if h < 8: color_class, text_class = "card-red", "text-red"
+    elif h <= 15: color_class, text_class = "card-yellow", "text-yellow"
 
     with cols[i % 4]:
         st.markdown(f"""
-            <div class="card {status_class}">
-                <div class="card-header">
-                    <span class="card-code">{item['code']}</span>
-                    <span class="card-pct">{pct:.0f}%</span>
-                </div>
-                <div class="card-desc">{item['name']}</div>
-                <div class="card-racks">{item['racks']}R</div>
-                <div class="card-pieces">{pecas:,} PÇS</div>
-                <div class="hours-box {bg_class}">{h:.1f}h</div>
+            <div class="card {color_class}">
+                <span class="card-code">{item['code']}</span>
+                <span class="card-name">{item['name']}</span>
+                <span class="card-racks">{item['racks']}R</span>
+                <div class="card-hours {text_class}">{h:.1f}h</div>
             </div>
         """, unsafe_allow_html=True)
-
-# 7. LEGENDA
-st.markdown("""
-    <div class="legend">
-        <span><span class="dot" style="background-color: #ef4444;"></span>CRÍTICO (&lt; 8H)</span>
-        <span><span class="dot" style="background-color: #facc15;"></span>ATENÇÃO (8H - 15H)</span>
-        <span><span class="dot" style="background-color: #22c55e;"></span>SEGURO (&gt; 15H)</span>
-    </div>
-""", unsafe_allow_html=True)
