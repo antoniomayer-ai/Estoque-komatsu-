@@ -3,107 +3,122 @@ import pandas as pd
 from datetime import datetime
 import urllib.parse
 
-# 1. ESTILO "LUZ TOTAL" - COMPACTO PARA CELULAR
+# 1. FUNILARIA E PINTURA (Design Premium)
 st.set_page_config(page_title="KOMATSU PANELTRACK", layout="wide")
+
 st.markdown("""
     <style>
-    .stApp { background-color: #ffffff !important; }
-    * { color: #000000 !important; font-family: sans-serif; font-size: 14px; }
-    h1, h2, h3 { color: #004a99 !important; margin: 0; padding: 0; }
-    /* Tabela compacta */
-    .compact-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    .compact-table td, .compact-table th { border: 1px solid #ddd; padding: 4px; text-align: center; }
-    .bg-red { background-color: #ffcccc; color: #cc0000 !important; font-weight: bold; }
-    .bg-yellow { background-color: #ffffcc; color: #886600 !important; font-weight: bold; }
-    .bg-green { background-color: #ccffcc; color: #006600 !important; font-weight: bold; }
-    /* Botão WhatsApp */
-    .btn-zap { background-color: #25d366; color: white !important; padding: 10px; border-radius: 5px; text-decoration: none; font-weight: bold; display: block; text-align: center; margin-bottom: 10px; }
+    /* Fundo Dark Profissional */
+    .stApp { background-color: #0e1117 !important; }
+    
+    /* Títulos e Textos */
+    h1, h2, h3, p, span { color: #ffffff !important; font-family: 'Inter', sans-serif; }
+    
+    /* Cards de Gestão à Vista */
+    .metric-card {
+        background-color: #1d2129;
+        border: 1px solid #30363d;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-top: 5px solid #238636; /* Verde por padrão */
+    }
+    .critico { border-top-color: #da3633 !important; }
+    .atencao { border-top-color: #d29922 !important; }
+    
+    .card-code { font-weight: bold; font-size: 1.1rem; color: #58a6ff; }
+    .card-name { font-size: 0.8rem; color: #8b949e; text-transform: uppercase; }
+    .card-racks { font-size: 1.8rem; font-weight: bold; margin: 5px 0; }
+    .card-hours { font-size: 1.1rem; font-weight: bold; }
+    
+    /* Botão WhatsApp Estilo Premium */
+    .btn-whatsapp {
+        background-color: #238636;
+        color: white !important;
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+        text-decoration: none;
+        display: block;
+        font-weight: bold;
+        margin-bottom: 20px;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn-whatsapp:hover { background-color: #2ea043; }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. BANCO DE DADOS (TODOS OS 22 ITENS)
-if 'inventory' not in st.session_state:
-    st.session_state.inventory = [
-        {"code": "GA035", "name": "LE", "cat": "COMMON", "per": 100, "racks": 9, "ideal": 24},
-        {"code": "GA057", "name": "LE", "cat": "COMMON", "per": 40, "racks": 24, "ideal": 60},
-        {"code": "GA038", "name": "INT", "cat": "COMMON", "per": 20, "racks": 57, "ideal": 119},
-        {"code": "GA058", "name": "LD", "cat": "COMMON", "per": 40, "racks": 29, "ideal": 60},
-        {"code": "GA037", "name": "DASH", "cat": "COMMON", "per": 100, "racks": 12, "ideal": 24},
-        {"code": "GA036", "name": "LD", "cat": "COMMON", "per": 100, "racks": 12, "ideal": 24},
-        {"code": "GA061", "name": "LE", "cat": "NB", "per": 40, "racks": 14, "ideal": 20},
-        {"code": "GA062", "name": "LD", "cat": "NB", "per": 40, "racks": 14, "ideal": 20},
-        {"code": "GA039", "name": "NB4", "cat": "NB", "per": 40, "racks": 15, "ideal": 20},
-        {"code": "GA051", "name": "LE", "cat": "HB", "per": 50, "racks": 19, "ideal": 32},
-        {"code": "GA041", "name": "EXT", "cat": "COMMON", "per": 46, "racks": 70, "ideal": 52},
-        {"code": "GA052", "name": "LD", "cat": "HB", "per": 50, "racks": 21, "ideal": 32},
-        {"code": "GA042", "name": "INT", "cat": "COMMON", "per": 23, "racks": 40, "ideal": 104},
-        {"code": "GA065", "name": "LE", "cat": "HB", "per": 40, "racks": 30, "ideal": 40},
-        {"code": "GA063", "name": "LE", "cat": "HB", "per": 24, "racks": 52, "ideal": 67},
-        {"code": "GA059", "name": "LE", "cat": "NB", "per": 24, "racks": 35, "ideal": 33},
-        {"code": "GA066", "name": "LD", "cat": "HB", "per": 40, "racks": 35, "ideal": 40},
-        {"code": "GA055", "name": "LE", "cat": "COMMON", "per": 24, "racks": 100, "ideal": 100},
-        {"code": "GA064", "name": "LD", "cat": "HB", "per": 24, "racks": 63, "ideal": 67},
-        {"code": "GA056", "name": "LD", "cat": "COMMON", "per": 24, "racks": 110, "ideal": 100},
-        {"code": "GA060", "name": "LD", "cat": "NB", "per": 24, "racks": 46, "ideal": 33},
-        {"code": "GA040", "name": "HB5", "cat": "HB", "per": 50, "racks": 45, "ideal": 32},
+# 2. DADOS COMPLETOS (AS 22 PEÇAS)
+if 'estoque' not in st.session_state:
+    st.session_state.estoque = [
+        {"id": "1", "code": "GA035", "name": "Assoalho Diant LE", "cat": "COMMON", "per": 100, "racks": 9, "ideal": 24},
+        {"id": "2", "code": "GA036", "name": "Assoalho Diant LD", "cat": "COMMON", "per": 100, "racks": 12, "ideal": 24},
+        {"id": "3", "code": "GA037", "name": "Painel Dash", "cat": "COMMON", "per": 100, "racks": 12, "ideal": 24},
+        {"id": "4", "code": "GA038", "name": "Assoalho Interm", "cat": "COMMON", "per": 20, "racks": 57, "ideal": 119},
+        {"id": "5", "code": "GA039", "name": "Assoalho Trás NB4", "cat": "NB", "per": 40, "racks": 15, "ideal": 20},
+        {"id": "6", "code": "GA040", "name": "Assoalho Trás HB5", "cat": "HB", "per": 50, "racks": 45, "ideal": 32},
+        {"id": "7", "code": "GA042", "name": "Cofre Externo", "cat": "COMMON", "per": 23, "racks": 40, "ideal": 104},
+        {"id": "8", "code": "GA041", "name": "Cofre Interno", "cat": "COMMON", "per": 46, "racks": 70, "ideal": 52},
+        {"id": "9", "code": "GA051", "name": "Lateral Int LE", "cat": "HB", "per": 50, "racks": 19, "ideal": 32},
+        {"id": "10", "code": "GA052", "name": "Lateral Int LD", "cat": "HB", "per": 50, "racks": 21, "ideal": 32},
+        {"id": "11", "code": "GA055", "name": "Porta Ext Diant LE", "cat": "COMMON", "per": 24, "racks": 100, "ideal": 100},
+        {"id": "12", "code": "GA056", "name": "Porta Ext Diant LD", "cat": "COMMON", "per": 24, "racks": 110, "ideal": 100},
+        {"id": "13", "code": "GA057", "name": "Porta Int Diant LE", "cat": "COMMON", "per": 40, "racks": 24, "ideal": 60},
+        {"id": "14", "code": "GA058", "name": "Porta Int Diant LD", "cat": "COMMON", "per": 40, "racks": 29, "ideal": 60},
+        {"id": "15", "code": "GA059", "name": "Porta Ext Trás LE NB4", "cat": "NB", "per": 24, "racks": 35, "ideal": 33},
+        {"id": "16", "code": "GA060", "name": "Porta Ext Trás LD NB4", "cat": "NB", "per": 24, "racks": 46, "ideal": 33},
+        {"id": "17", "code": "GA061", "name": "Porta Int Trás LE NB4", "cat": "NB", "per": 40, "racks": 14, "ideal": 20},
+        {"id": "18", "code": "GA062", "name": "Porta Int Trás LD NB4", "cat": "NB", "per": 40, "racks": 14, "ideal": 20},
+        {"id": "19", "code": "GA063", "name": "Porta Ext Trás LE HB5", "cat": "HB", "per": 24, "racks": 52, "ideal": 67},
+        {"id": "20", "code": "GA064", "name": "Porta Ext Trás LD HB5", "cat": "HB", "per": 24, "racks": 63, "ideal": 67},
+        {"id": "21", "code": "GA065", "name": "Porta Int Trás LE HB5", "cat": "HB", "per": 40, "racks": 30, "ideal": 40},
+        {"id": "22", "code": "GA066", "name": "Porta Int Trás LD HB5", "cat": "HB", "per": 40, "racks": 35, "ideal": 40},
     ]
 
-# 3. HEADER E CONFIGURAÇÃO JPH
-st.title("🚜 KOMATSU - PAINEL")
-col_j1, col_j2, col_j3 = st.columns(3)
-j_total = col_j1.number_input("JPH", value=61)
-j_nb = col_j2.number_input("NB", value=24)
-j_hb = col_j3.number_input("HB", value=37)
+# 3. LÓGICA DE PRODUÇÃO
+j_total, j_nb, j_hb = 61, 24, 37 # Valores que você usa
 
-# 4. LÓGICA DO RELATÓRIO WHATSAPP
+st.title("🚜 KOMATSU - PANELTRACK")
+
+# Gerar Relatório WhatsApp
 agora = datetime.now().strftime("%d/%m %H:%M")
-total_r = sum([i['racks'] for i in st.session_state.inventory])
-ideal_r = sum([i['ideal'] for i in st.session_state.inventory])
-pct_geral = (total_r / ideal_r * 100)
+msg = f"RELATÓRIO Komatsu 📅 {agora}\n\n"
+for i in st.session_state.estoque:
+    p = i['racks'] * i['per']
+    h = p / (j_nb if i['cat'] == 'NB' else j_hb if i['cat'] == 'HB' else j_total)
+    status = "🔴" if h < 8 else "⚠️" if h <= 15 else "✅"
+    msg += f"{status} {i['code']}: {h:.1f}h\n"
 
-msg_whatsapp = f"RELATÓRIO Komatsu 📅 {agora}\n📊 Nível Geral: {pct_geral:.0f}%\n⚡ JPH: {j_total} (NB: {j_nb} / HB: {j_hb})\n\n"
-lista_ok, lista_at, lista_cr = [], [], []
+url_zap = "https://wa.me/?text=" + urllib.parse.quote(msg)
+st.markdown(f'<a href="{url_zap}" target="_blank" class="btn-whatsapp">📲 EXPORTAR PARA WHATSAPP</a>', unsafe_allow_html=True)
 
-for item in st.session_state.inventory:
-    pecas = item['racks'] * item['per']
-    if item['cat'] == 'NB': h = pecas / j_nb if j_nb > 0 else 0
-    elif item['cat'] == 'HB': h = pecas / j_hb if j_hb > 0 else 0
-    else: h = pecas / j_total if j_total > 0 else 0
-    
-    txt = f"* {item['code']} {item['name']}: {h:.1f}h"
-    if h < 8: lista_cr.append(txt)
-    elif h <= 15: lista_at.append(txt)
-    else: lista_ok.append(txt)
-
-if lista_cr: msg_whatsapp += "🔴 CRÍTICO (<8h)\n" + "\n".join(lista_cr) + "\n\n"
-if lista_at: msg_whatsapp += "⚠️ ATENÇÃO (8h-15h)\n" + "\n".join(lista_at) + "\n\n"
-if lista_ok: msg_whatsapp += "✅ OK (>15h)\n" + "\n".join(lista_ok)
-
-# 5. BOTÃO WHATSAPP E EDIÇÃO
-url_zap = "https://wa.me/?text=" + urllib.parse.quote(msg_whatsapp)
-st.markdown(f'<a href="{url_zap}" target="_blank" class="btn-zap">📲 ENVIAR PARA WHATSAPP</a>', unsafe_allow_html=True)
-
-with st.expander("📝 LANÇAR RACKS"):
-    escolha = st.selectbox("Peça:", [f"{i['code']} - {i['name']}" for i in st.session_state.inventory])
-    valor = st.number_input("Nova Qtd:", min_value=0, step=1)
+# 4. LANÇAMENTO DE DADOS
+with st.expander("📝 ATUALIZAR ESTOQUE"):
+    escolha = st.selectbox("Peça:", [f"{i['code']} - {i['name']}" for i in st.session_state.estoque])
+    valor = st.number_input("Racks:", min_value=0, step=1)
     if st.button("SALVAR"):
-        for item in st.session_state.inventory:
-            if item['code'] == escolha.split(" - ")[0]: item['racks'] = valor
+        for i in st.session_state.estoque:
+            if i['code'] == escolha.split(" - ")[0]: i['racks'] = valor
         st.rerun()
 
-# 6. RELATÓRIO COMPACTO (CABEM TODOS NA TELA)
-html_table = '<table class="compact-table"><tr><th>Cód</th><th>Peça</th><th>R</th><th>Horas</th></tr>'
-for item in st.session_state.inventory:
-    pecas = item['racks'] * item['per']
-    if item['cat'] == 'NB': h = pecas / j_nb if j_nb > 0 else 0
-    elif item['cat'] == 'HB': h = pecas / j_hb if j_hb > 0 else 0
-    else: h = pecas / j_total if j_total > 0 else 0
-    
-    cor = "bg-green"
-    if h < 8: cor = "bg-red"
-    elif h <= 15: cor = "bg-yellow"
-    
-    html_table += f'<tr><td>{item["code"]}</td><td>{item["name"]}</td><td>{item["racks"]}</td><td class="{cor}">{h:.1f}h</td></tr>'
-html_table += '</table>'
+st.divider()
 
-st.markdown(html_table, unsafe_allow_html=True)
+# 5. GRID DE CARDS (O Porsche)
+cols = st.columns(2) # 2 por linha no celular fica perfeito
+for i, item in enumerate(st.session_state.estoque):
+    pecas = item['racks'] * item['per']
+    h = pecas / (j_nb if item['cat'] == 'NB' else j_hb if item['cat'] == 'HB' else j_total)
+    
+    status_color = ""
+    if h < 8: status_color = "critico"
+    elif h <= 15: status_color = "atencao"
+
+    with cols[i % 2]:
+        st.markdown(f"""
+            <div class="metric-card {status_color}">
+                <div class="card-code">{item['code']}</div>
+                <div class="card-name">{item['name']}</div>
+                <div class="card-racks">{item['racks']} Racks</div>
+                <div class="card-hours">{h:.1f} horas</div>
+            </div>
+        """, unsafe_allow_html=True)
